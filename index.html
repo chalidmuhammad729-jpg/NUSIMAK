@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NUSIMAK — Nurul Ulum Sistem Monitoring Asrama & Kegiatan</title>
+  <title>NUSIMAK — Nurul Ulum Sistem Monitoring Asrama &amp; Kegiatan</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,6 +16,7 @@
               50: '#f0f9ff',
               100: '#e0f2fe',
               200: '#bae6fd',
+              300: '#7dd3fc',
               500: '#0ea5e9',
               600: '#0284c7',
               700: '#0369a1',
@@ -23,7 +24,9 @@
               900: '#0c4a6e'
             },
             kitab: {
+              50: '#fefce8',
               100: '#fef9c3',
+              200: '#fef08a',
               300: '#fde047',
               400: '#facc15',
               500: '#eab308',
@@ -37,31 +40,116 @@
   <style>
     @media print {
       .no-print { display: none !important; }
-      body { background: #ffffff !important; }
-      .print-break { break-inside: avoid; }
+      .print-only { display: block !important; }
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11pt;
+      }
+      .print-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+      }
+      .print-break-avoid { break-inside: avoid; page-break-inside: avoid; }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen antialiased">
+<body class="bg-slate-50 text-slate-900 min-h-screen antialiased selection:bg-langit-100 selection:text-langit-900">
   <div id="root"></div>
 
   <script>
     (function () {
       const e = React.createElement;
-      const { useState, useEffect, useMemo } = React;
+      const { useState, useEffect, useMemo, useRef } = React;
 
-      const STORAGE_KEY = 'nusimak_nurul_ulum_bantul_v1';
+      const STORAGE_KEY = 'nusimak_nurul_ulum_bantul_v2';
 
-      const BAGIAN_LIST = [
-        { id: 'dewan_pengasuh', nama: 'Dewan Pengasuh', peran: 'Arahan, pembinaan ruhiyah, kebijakan umum & evaluasi strategis' },
-        { id: 'dewan_pengawas', nama: 'Dewan Pengawas', peran: 'Kontrol tata tertib, kepatuhan aturan & audit kepengurusan' },
-        { id: 'ustadz_ustadzah', nama: 'Ustadz & Ustadzah', peran: 'Pengajaran kitab, tahfidz/ngaji, adab & pendampingan santri' },
-        { id: 'osim', nama: 'OSIM', peran: 'Penggerak kegiatan harian, kedisiplinan & program santri' },
-        { id: 'komplek_zainuri', nama: 'Komplek Mbah Zainuri', peran: 'Pengelolaan kamar, kebersihan & ketertiban asrama' },
-        { id: 'komplek_achmadi', nama: 'Komplek Mbah Achmadi', peran: 'Pengelolaan kamar, kebersihan & ketertiban asrama' },
-        { id: 'komplek_romlah', nama: 'Komplek Mbah Romlah', peran: 'Pengelolaan kamar, kebersihan & ketertiban asrama' },
-        { id: 'komplek_wasirah', nama: 'Komplek Mbah Wasirah', peran: 'Pengelolaan kamar, kebersihan & ketertiban asrama' }
+      const LAPISAN_SKEMA = [
+        {
+          kodeLapisan: 'LAPISAN 1',
+          judul: 'Arahan & Pengawasan Utama',
+          keterangan: 'Penentu kebijakan strategis, pembinaan ruhiyah, dan kontrol kepatuhan aturan pondok.',
+          gridClass: 'grid-cols-1 md:grid-cols-2',
+          anggota: [
+            {
+              id: 'dewan_pengasuh',
+              nomor: '01',
+              nama: 'Dewan Pengasuh',
+              peran: 'Pembina utama, pemegang arah kebijakan umum, pembinaan akhlak & evaluasi strategis pesantren.',
+              utama: true
+            },
+            {
+              id: 'dewan_pengawas',
+              nomor: '02',
+              nama: 'Dewan Pengawas',
+              peran: 'Pengawasan tata tertib, kepatuhan aturan kepengurusan, dan evaluasi berkala program asrama.'
+            }
+          ]
+        },
+        {
+          kodeLapisan: 'LAPISAN 2',
+          judul: 'Pendidikan & Penggerak Kegiatan',
+          keterangan: 'Pelaksana kurikulum ngaji, bimbingan adab, dan penggerak ritme harian santri.',
+          gridClass: 'grid-cols-1 md:grid-cols-2',
+          anggota: [
+            {
+              id: 'ustadz_ustadzah',
+              nomor: '03',
+              nama: 'Ustadz & Ustadzah',
+              peran: 'Pengajaran kitab & Al-Qur’an, monitoring setoran/pencapaian ngaji, serta pendampingan akademik.'
+            },
+            {
+              id: 'osim',
+              nomor: '04',
+              nama: 'OSIM',
+              peran: 'Penggerak disiplin harian, ketertiban kegiatan santri, kebersihan umum & program kesantrian.'
+            }
+          ]
+        },
+        {
+          kodeLapisan: 'LAPISAN 3',
+          judul: 'Operasional Asrama (4 Komplek)',
+          keterangan: 'Unit pengelolaan kamar, ketertiban asrama, dan pemantauan langsung santri per komplek.',
+          gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+          anggota: [
+            {
+              id: 'komplek_zainuri',
+              nomor: '05',
+              nama: 'Komplek Mbah Zainuri',
+              peran: 'Pengelolaan kamar, kebersihan, ketertiban & laporan santri Komplek Mbah Zainuri.',
+              komplekTarget: 'Komplek Mbah Zainuri'
+            },
+            {
+              id: 'komplek_achmadi',
+              nomor: '06',
+              nama: 'Komplek Mbah Achmadi',
+              peran: 'Pengelolaan kamar, kebersihan, ketertiban & laporan santri Komplek Mbah Achmadi.',
+              komplekTarget: 'Komplek Mbah Achmadi'
+            },
+            {
+              id: 'komplek_romlah',
+              nomor: '07',
+              nama: 'Komplek Mbah Romlah',
+              peran: 'Pengelolaan kamar, kebersihan, ketertiban & laporan santri Komplek Mbah Romlah.',
+              komplekTarget: 'Komplek Mbah Romlah'
+            },
+            {
+              id: 'komplek_wasirah',
+              nomor: '08',
+              nama: 'Komplek Mbah Wasirah',
+              peran: 'Pengelolaan kamar, kebersihan, ketertiban & laporan santri Komplek Mbah Wasirah.',
+              komplekTarget: 'Komplek Mbah Wasirah'
+            }
+          ]
+        }
       ];
+
+      const SEMUA_BAGIAN = LAPISAN_SKEMA.reduce(function (acc, lap) {
+        return acc.concat(lap.anggota);
+      }, []);
 
       const KOMPLEK_LIST = [
         'Komplek Mbah Zainuri',
@@ -70,121 +158,185 @@
         'Komplek Mbah Wasirah'
       ];
 
-      const PREDIKAT_NGAJI = ['Mumtaz', 'Jayyid Jiddan', 'Jayyid', 'Perlu Bimbingan'];
+      const PREDIKAT_LIST = ['Mumtaz', 'Jayyid Jiddan', 'Jayyid', 'Perlu Bimbingan'];
+      const STATUS_LIST = ['Dipantau', 'Tindak Lanjut', 'Selesai'];
 
-      const DATA_AWAL = {
+      const DEFAULT_STATE = {
+        periodeAktif: 'Tahun Ajaran 2026/2027 — Semester Ganjil',
+        logoUrl: '',
         catatan: [
           {
-            id: 'cat-1',
+            id: 'cat-101',
             bagianId: 'dewan_pengasuh',
             tanggal: '2026-11-18',
+            periode: 'Tahun Ajaran 2026/2027 — Semester Ganjil',
             judul: 'Penguatan Disiplin Ngaji Ba’da Maghrib & Subuh',
-            isi: 'Setiap bagian memastikan absensi dan murojaah santri berjalan tertib serta menjaga adab di lingkungan pondok.',
+            isi: 'Seluruh koordinator komplek dan ustadz/ustadzah memastikan presensi setoran tepat waktu serta menjaga ketenangan area masjid dan asrama.',
             status: 'Selesai'
           },
           {
-            id: 'cat-2',
+            id: 'cat-102',
             bagianId: 'dewan_pengawas',
-            tanggal: '2026-11-18',
-            judul: 'Cek Ketertiban Jam Malam Asrama',
-            isi: 'Lampu kamar padam tepat waktu dan kegiatan belajar mandiri sudah berjalan di sebagian besar kamar.',
+            tanggal: '2026-11-19',
+            periode: 'Tahun Ajaran 2026/2027 — Semester Ganjil',
+            judul: 'Audit Ketertiban Jam Malam & Inventaris Kamar',
+            isi: 'Sebagian besar kamar sudah mematuhi jam istirahat; perlu penertiban jadwal piket malam di dua kamar sayap timur.',
+            status: 'Tindak Lanjut'
+          },
+          {
+            id: 'cat-103',
+            bagianId: 'ustadz_ustadzah',
+            tanggal: '2026-11-19',
+            periode: 'Tahun Ajaran 2026/2027 — Semester Ganjil',
+            judul: 'Evaluasi Tajwid & Kelancaran Murojaah Santri Baru',
+            isi: 'Santri kelas awal dijadwalkan pendampingan bacaan makhraj 20 menit sebelum setoran utama.',
             status: 'Dipantau'
           },
           {
-            id: 'cat-3',
-            bagianId: 'komplek_zainuri',
-            tanggal: '2026-11-19',
-            judul: 'Piket Kebersihan & Penataan Almari',
-            isi: 'Seluruh kamar melaksanakan piket pagi; perlu tambahan tempat jemuran di area belakang.',
-            status: 'Tindak Lanjut'
+            id: 'cat-104',
+            bagianId: 'osim',
+            tanggal: '2026-11-20',
+            periode: 'Tahun Ajaran 2026/2027 — Semester Ganjil',
+            judul: 'Koordinasi Ro’an Akbar Jumat Pagi',
+            isi: 'Pembagian zona kebersihan halaman utama, drainase, dan area jemuran antar-komplek telah disusun.',
+            status: 'Dipantau'
           }
         ],
         santri: [
           {
-            id: 's-1',
+            id: 's-101',
             komplek: 'Komplek Mbah Zainuri',
             namaLengkap: 'Ahmad Fauzi',
             kamar: 'A-01',
-            pencapaianNgaji: 'Juz 30 lancar, mulai Juz 1 & Jurumiyah bab Kalam',
+            pencapaianNgaji: 'Al-Qur’an Juz 30 lancar, mulai Juz 1 & Kitab Jurumiyah bab Kalam',
             predikat: 'Mumtaz',
-            catatan: 'Rajin setoran pagi dan membantu teman sekamar.'
+            catatan: 'Setoran harian konsisten dan aktif membimbing adik kamar.'
           },
           {
-            id: 's-2',
+            id: 's-102',
             komplek: 'Komplek Mbah Achmadi',
             namaLengkap: 'Muhammad Rasyid',
             kamar: 'B-02',
-            pencapaianNgaji: 'Al-Qur’an Juz 12 & kitab Safinah bab Thaharah',
+            pencapaianNgaji: 'Al-Qur’an Juz 12 & Kitab Safinatun Najah bab Thaharah',
             predikat: 'Jayyid Jiddan',
-            catatan: 'Hafalan stabil, perlu peningkatan ketepatan tajwid mad.'
+            catatan: 'Hafalan kuat, perlu ketelitian panjang pendek mad saat setoran cepat.'
           },
           {
-            id: 's-3',
+            id: 's-103',
             komplek: 'Komplek Mbah Romlah',
             namaLengkap: 'Nadia Rahmawati',
             kamar: 'C-01',
-            pencapaianNgaji: 'Juz 29 & 28 selesai, setoran harian lancar',
+            pencapaianNgaji: 'Juz 29 & 28 selesai, lanjut Juz 27 & Nadhom Aqidatul Awam',
             predikat: 'Mumtaz',
-            catatan: 'Konsisten mengikuti murojaah sore.'
+            catatan: 'Disiplin mengikuti murojaah sore dan tertib administrasi kamar.'
           },
           {
-            id: 's-4',
+            id: 's-104',
             komplek: 'Komplek Mbah Wasirah',
             namaLengkap: 'Salma Azzahra',
             kamar: 'D-03',
-            pencapaianNgaji: 'Iqro 6 lanjut Al-Qur’an Juz 2',
+            pencapaianNgaji: 'Iqro 6 lanjut Al-Qur’an Juz 2 (fokus makhraj & kelancaran)',
             predikat: 'Perlu Bimbingan',
-            catatan: 'Pendampingan intensif pelafalan huruf dan harakat.'
+            catatan: 'Mendapat pendampingan khusus ba’da Ashar bersama ustadzah.'
           }
         ]
       };
 
-      function muatData() {
+      function loadInitialState() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return DATA_AWAL;
+          if (!raw) return DEFAULT_STATE;
           const parsed = JSON.parse(raw);
           return {
-            catatan: Array.isArray(parsed.catatan) ? parsed.catatan : DATA_AWAL.catatan,
-            santri: Array.isArray(parsed.santri) ? parsed.santri : DATA_AWAL.santri
+            periodeAktif: typeof parsed.periodeAktif === 'string' && parsed.periodeAktif.trim()
+              ? parsed.periodeAktif
+              : DEFAULT_STATE.periodeAktif,
+            logoUrl: typeof parsed.logoUrl === 'string' ? parsed.logoUrl : '',
+            catatan: Array.isArray(parsed.catatan) ? parsed.catatan : DEFAULT_STATE.catatan,
+            santri: Array.isArray(parsed.santri) ? parsed.santri : DEFAULT_STATE.santri
           };
-        } catch (_err) {
-          return DATA_AWAL;
+        } catch (_e) {
+          return DEFAULT_STATE;
         }
       }
 
-      function badgeStatus(status) {
-        if (status === 'Selesai') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-        if (status === 'Dipantau') return 'bg-langit-100 text-langit-800 border-langit-200';
-        return 'bg-kitab-100 text-amber-900 border-kitab-300';
+      function formatTanggalIndo(isoDate) {
+        if (!isoDate) return '-';
+        const parts = isoDate.split('-');
+        if (parts.length !== 3) return isoDate;
+        const bulan = [
+          'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+          'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+        ];
+        const idx = parseInt(parts[1], 10) - 1;
+        return parts[2] + ' ' + (bulan[idx] || parts[1]) + ' ' + parts[0];
       }
 
-      function badgePredikat(predikat) {
-        if (predikat === 'Mumtaz') return 'bg-langit-600 text-white';
+      function statusBadgeClass(status) {
+        if (status === 'Selesai') return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+        if (status === 'Tindak Lanjut') return 'bg-kitab-100 text-amber-900 border-kitab-400';
+        return 'bg-langit-50 text-langit-800 border-langit-200';
+      }
+
+      function predikatBadgeClass(predikat) {
+        if (predikat === 'Mumtaz') return 'bg-langit-700 text-white';
         if (predikat === 'Jayyid Jiddan') return 'bg-langit-100 text-langit-900 border border-langit-300';
         if (predikat === 'Jayyid') return 'bg-kitab-100 text-amber-900 border border-kitab-300';
         return 'bg-rose-100 text-rose-800 border border-rose-200';
       }
 
-      function App() {
-        const [data, setData] = useState(muatData);
-        const [tab, setTab] = useState('bagian');
+      function LogoBadge(props) {
+        const logoUrl = props.logoUrl;
+        const sizeClass = props.sizeClass || 'w-12 h-12';
+        if (logoUrl) {
+          return e('img', {
+            src: logoUrl,
+            alt: 'Logo Pondok Pesantren Nurul Ulum Bantul',
+            className: sizeClass + ' rounded-xl object-contain bg-white p-1 border border-slate-200 shrink-0'
+          });
+        }
+        return e(
+          'div',
+          {
+            className:
+              sizeClass +
+              ' rounded-xl bg-gradient-to-br from-langit-600 to-langit-800 border-2 border-kitab-400 flex flex-col items-center justify-center text-white font-extrabold shrink-0 shadow-sm'
+          },
+          e('span', { className: 'text-sm leading-none tracking-tight text-kitab-300' }, 'NU'),
+          e('span', { className: 'text-[8px] tracking-widest uppercase mt-0.5 text-white/90' }, 'BANTUL')
+        );
+      }
 
-        // Filter & form catatan bagian
+      function App() {
+        const [state, setState] = useState(loadInitialState);
+        const [activeTab, setActiveTab] = useState('bagian');
+        const [savedIndicator, setSavedIndicator] = useState('Tersimpan otomatis di perangkat ini');
+        const [showLogoModal, setShowLogoModal] = useState(false);
+        const [logoUrlInput, setLogoUrlInput] = useState('');
+
+        // Filter & Form Catatan (Tab 1)
         const [filterBagian, setFilterBagian] = useState('semua');
+        const [filterStatus, setFilterStatus] = useState('semua');
+        const [filterDariTanggal, setFilterDariTanggal] = useState('');
+        const [filterSampaiTanggal, setFilterSampaiTanggal] = useState('');
         const [cariCatatan, setCariCatatan] = useState('');
+        const [editingCatatanId, setEditingCatatanId] = useState(null);
         const [formCatatan, setFormCatatan] = useState({
-          bagianId: BAGIAN_LIST[0].id,
+          bagianId: SEMUA_BAGIAN[0].id,
           tanggal: new Date().toISOString().slice(0, 10),
+          periode: state.periodeAktif,
           judul: '',
           isi: '',
           status: 'Dipantau'
         });
 
-        // Filter & form santri per komplek
+        // Filter & Form Santri (Tab 2)
         const [komplekAktif, setKomplekAktif] = useState(KOMPLEK_LIST[0]);
         const [cariSantri, setCariSantri] = useState('');
+        const [filterPredikat, setFilterPredikat] = useState('semua');
+        const [editingSantriId, setEditingSantriId] = useState(null);
         const [formSantri, setFormSantri] = useState({
+          komplek: KOMPLEK_LIST[0],
           namaLengkap: '',
           kamar: '',
           pencapaianNgaji: '',
@@ -192,90 +344,270 @@
           catatan: ''
         });
 
-        useEffect(() => {
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-          } catch (_err) {
-            // Abaikan error penyimpanan penuh
-          }
-        }, [data]);
+        // Filter Rekap (Tab 3)
+        const [rekapHanyaPeriodeAktif, setRekapHanyaPeriodeAktif] = useState(false);
+        const [rekapKomplekFilter, setRekapKomplekFilter] = useState('semua');
 
-        const bagianMap = useMemo(() => {
+        const formCatatanRef = useRef(null);
+        const formSantriRef = useRef(null);
+
+        // Simpan ke localStorage otomatis
+        useEffect(function () {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            setSavedIndicator('Tersimpan otomatis di perangkat ini');
+          } catch (_err) {
+            setSavedIndicator('Peringatan: Penyimpanan browser penuh (kurangi ukuran gambar logo)');
+          }
+        }, [state]);
+
+        // Sinkron periode default pada form catatan baru
+        useEffect(function () {
+          if (!editingCatatanId) {
+            setFormCatatan(function (prev) {
+              return { ...prev, periode: state.periodeAktif };
+            });
+          }
+        }, [state.periodeAktif, editingCatatanId]);
+
+        // Sinkron komplek pada form santri baru saat pindah komplek
+        useEffect(function () {
+          if (!editingSantriId) {
+            setFormSantri(function (prev) {
+              return { ...prev, komplek: komplekAktif };
+            });
+          }
+        }, [komplekAktif, editingSantriId]);
+
+        // Peringatan beforeunload jika ada isian formulir belum tersimpan
+        const hasUnsavedDraft =
+          formCatatan.judul.trim() !== '' ||
+          formCatatan.isi.trim() !== '' ||
+          formSantri.namaLengkap.trim() !== '' ||
+          formSantri.pencapaianNgaji.trim() !== '' ||
+          formSantri.catatan.trim() !== '';
+
+        useEffect(function () {
+          function handleBeforeUnload(ev) {
+            if (!hasUnsavedDraft) return;
+            ev.preventDefault();
+            ev.returnValue = '';
+          }
+          window.addEventListener('beforeunload', handleBeforeUnload);
+          return function () {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+          };
+        }, [hasUnsavedDraft]);
+
+        const bagianMap = useMemo(function () {
           const map = {};
-          BAGIAN_LIST.forEach((b) => { map[b.id] = b; });
+          SEMUA_BAGIAN.forEach(function (b) {
+            map[b.id] = b;
+          });
           return map;
         }, []);
 
-        const catatanTersaring = useMemo(() => {
-          return data.catatan.filter((item) => {
-            const cocokBagian = filterBagian === 'semua' || item.bagianId === filterBagian;
-            const q = cariCatatan.trim().toLowerCase();
-            const cocokTeks =
-              !q ||
+        const jumlahCatatanPerBagian = useMemo(function () {
+          const counts = {};
+          SEMUA_BAGIAN.forEach(function (b) {
+            counts[b.id] = 0;
+          });
+          state.catatan.forEach(function (c) {
+            if (counts[c.bagianId] !== undefined) {
+              counts[c.bagianId] += 1;
+            }
+          });
+          return counts;
+        }, [state.catatan]);
+
+        const jumlahTindakLanjut = useMemo(function () {
+          return state.catatan.filter(function (c) {
+            return c.status === 'Tindak Lanjut';
+          }).length;
+        }, [state.catatan]);
+
+        const jumlahPerluBimbingan = useMemo(function () {
+          return state.santri.filter(function (s) {
+            return s.predikat === 'Perlu Bimbingan';
+          }).length;
+        }, [state.santri]);
+
+        const catatanTersaring = useMemo(function () {
+          const q = cariCatatan.trim().toLowerCase();
+          return state.catatan.filter(function (item) {
+            if (filterBagian !== 'semua' && item.bagianId !== filterBagian) return false;
+            if (filterStatus !== 'semua' && item.status !== filterStatus) return false;
+            if (filterDariTanggal && item.tanggal < filterDariTanggal) return false;
+            if (filterSampaiTanggal && item.tanggal > filterSampaiTanggal) return false;
+            if (!q) return true;
+            const namaBagian = bagianMap[item.bagianId] ? bagianMap[item.bagianId].nama.toLowerCase() : '';
+            return (
               item.judul.toLowerCase().includes(q) ||
               item.isi.toLowerCase().includes(q) ||
-              (bagianMap[item.bagianId] && bagianMap[item.bagianId].nama.toLowerCase().includes(q));
-            return cocokBagian && cocokTeks;
+              (item.periode && item.periode.toLowerCase().includes(q)) ||
+              namaBagian.includes(q)
+            );
           });
-        }, [data.catatan, filterBagian, cariCatatan, bagianMap]);
+        }, [state.catatan, filterBagian, filterStatus, filterDariTanggal, filterSampaiTanggal, cariCatatan, bagianMap]);
 
-        const santriKomplek = useMemo(() => {
+        const santriTersaring = useMemo(function () {
           const q = cariSantri.trim().toLowerCase();
-          return data.santri.filter((s) => {
+          return state.santri.filter(function (s) {
             if (s.komplek !== komplekAktif) return false;
+            if (filterPredikat !== 'semua' && s.predikat !== filterPredikat) return false;
             if (!q) return true;
             return (
               s.namaLengkap.toLowerCase().includes(q) ||
+              s.kamar.toLowerCase().includes(q) ||
               s.pencapaianNgaji.toLowerCase().includes(q) ||
-              s.catatan.toLowerCase().includes(q) ||
-              s.kamar.toLowerCase().includes(q)
+              s.catatan.toLowerCase().includes(q)
             );
           });
-        }, [data.santri, komplekAktif, cariSantri]);
+        }, [state.santri, komplekAktif, filterPredikat, cariSantri]);
 
-        function tambahCatatan(ev) {
+        // Handler Catatan
+        function handleSimpanCatatan(ev) {
           ev.preventDefault();
           if (!formCatatan.judul.trim() || !formCatatan.isi.trim()) return;
-          const baru = {
-            id: 'cat-' + Date.now(),
-            bagianId: formCatatan.bagianId,
-            tanggal: formCatatan.tanggal,
-            judul: formCatatan.judul.trim(),
-            isi: formCatatan.isi.trim(),
-            status: formCatatan.status
-          };
-          setData((prev) => ({ ...prev, catatan: [baru, ...prev.catatan] }));
-          setFormCatatan((prev) => ({ ...prev, judul: '', isi: '' }));
+
+          if (editingCatatanId) {
+            setState(function (prev) {
+              return {
+                ...prev,
+                catatan: prev.catatan.map(function (c) {
+                  if (c.id !== editingCatatanId) return c;
+                  return {
+                    ...c,
+                    bagianId: formCatatan.bagianId,
+                    tanggal: formCatatan.tanggal,
+                    periode: formCatatan.periode.trim() || prev.periodeAktif,
+                    judul: formCatatan.judul.trim(),
+                    isi: formCatatan.isi.trim(),
+                    status: formCatatan.status
+                  };
+                })
+              };
+            });
+            setEditingCatatanId(null);
+          } else {
+            const baru = {
+              id: 'cat-' + Date.now(),
+              bagianId: formCatatan.bagianId,
+              tanggal: formCatatan.tanggal,
+              periode: formCatatan.periode.trim() || state.periodeAktif,
+              judul: formCatatan.judul.trim(),
+              isi: formCatatan.isi.trim(),
+              status: formCatatan.status
+            };
+            setState(function (prev) {
+              return { ...prev, catatan: [baru, ...prev.catatan] };
+            });
+          }
+
+          setFormCatatan({
+            bagianId: filterBagian !== 'semua' ? filterBagian : SEMUA_BAGIAN[0].id,
+            tanggal: new Date().toISOString().slice(0, 10),
+            periode: state.periodeAktif,
+            judul: '',
+            isi: '',
+            status: 'Dipantau'
+          });
         }
 
-        function ubahStatusCatatan(id, statusBaru) {
-          setData((prev) => ({
-            ...prev,
-            catatan: prev.catatan.map((c) => (c.id === id ? { ...c, status: statusBaru } : c))
-          }));
+        function mulaiEditCatatan(item) {
+          setEditingCatatanId(item.id);
+          setFormCatatan({
+            bagianId: item.bagianId,
+            tanggal: item.tanggal,
+            periode: item.periode || state.periodeAktif,
+            judul: item.judul,
+            isi: item.isi,
+            status: item.status
+          });
+          if (formCatatanRef.current) {
+            formCatatanRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
         }
 
-        function hapusCatatan(id) {
-          setData((prev) => ({
-            ...prev,
-            catatan: prev.catatan.filter((c) => c.id !== id)
-          }));
+        function batalEditCatatan() {
+          setEditingCatatanId(null);
+          setFormCatatan({
+            bagianId: SEMUA_BAGIAN[0].id,
+            tanggal: new Date().toISOString().slice(0, 10),
+            periode: state.periodeAktif,
+            judul: '',
+            isi: '',
+            status: 'Dipantau'
+          });
         }
 
-        function tambahSantri(ev) {
+        function ubahStatusCepat(id, statusBaru) {
+          setState(function (prev) {
+            return {
+              ...prev,
+              catatan: prev.catatan.map(function (c) {
+                return c.id === id ? { ...c, status: statusBaru } : c;
+              })
+            };
+          });
+        }
+
+        function hapusCatatan(item) {
+          if (!window.confirm('Hapus catatan "' + item.judul + '"? Tindakan ini tidak dapat dibatalkan.')) return;
+          if (editingCatatanId === item.id) batalEditCatatan();
+          setState(function (prev) {
+            return {
+              ...prev,
+              catatan: prev.catatan.filter(function (c) {
+                return c.id !== item.id;
+              })
+            };
+          });
+        }
+
+        // Handler Santri
+        function handleSimpanSantri(ev) {
           ev.preventDefault();
           if (!formSantri.namaLengkap.trim() || !formSantri.pencapaianNgaji.trim()) return;
-          const baru = {
-            id: 's-' + Date.now(),
-            komplek: komplekAktif,
-            namaLengkap: formSantri.namaLengkap.trim(),
-            kamar: formSantri.kamar.trim() || '-',
-            pencapaianNgaji: formSantri.pencapaianNgaji.trim(),
-            predikat: formSantri.predikat,
-            catatan: formSantri.catatan.trim() || '-'
-          };
-          setData((prev) => ({ ...prev, santri: [...prev.santri, baru] }));
+
+          if (editingSantriId) {
+            setState(function (prev) {
+              return {
+                ...prev,
+                santri: prev.santri.map(function (s) {
+                  if (s.id !== editingSantriId) return s;
+                  return {
+                    ...s,
+                    komplek: formSantri.komplek,
+                    namaLengkap: formSantri.namaLengkap.trim(),
+                    kamar: formSantri.kamar.trim() || '-',
+                    pencapaianNgaji: formSantri.pencapaianNgaji.trim(),
+                    predikat: formSantri.predikat,
+                    catatan: formSantri.catatan.trim() || '-'
+                  };
+                })
+              };
+            });
+            setKomplekAktif(formSantri.komplek);
+            setEditingSantriId(null);
+          } else {
+            const baru = {
+              id: 's-' + Date.now(),
+              komplek: formSantri.komplek,
+              namaLengkap: formSantri.namaLengkap.trim(),
+              kamar: formSantri.kamar.trim() || '-',
+              pencapaianNgaji: formSantri.pencapaianNgaji.trim(),
+              predikat: formSantri.predikat,
+              catatan: formSantri.catatan.trim() || '-'
+            };
+            setState(function (prev) {
+              return { ...prev, santri: [...prev.santri, baru] };
+            });
+            setKomplekAktif(formSantri.komplek);
+          }
+
           setFormSantri({
+            komplek: komplekAktif,
             namaLengkap: '',
             kamar: '',
             pencapaianNgaji: '',
@@ -284,254 +616,727 @@
           });
         }
 
-        function hapusSantri(id) {
-          setData((prev) => ({
-            ...prev,
-            santri: prev.santri.filter((s) => s.id !== id)
-          }));
+        function mulaiEditSantri(s) {
+          setEditingSantriId(s.id);
+          setFormSantri({
+            komplek: s.komplek,
+            namaLengkap: s.namaLengkap,
+            kamar: s.kamar === '-' ? '' : s.kamar,
+            pencapaianNgaji: s.pencapaianNgaji,
+            predikat: s.predikat,
+            catatan: s.catatan === '-' ? '' : s.catatan
+          });
+          if (formSantriRef.current) {
+            formSantriRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
         }
 
-        function unduhBackupJSON() {
-          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        function batalEditSantri() {
+          setEditingSantriId(null);
+          setFormSantri({
+            komplek: komplekAktif,
+            namaLengkap: '',
+            kamar: '',
+            pencapaianNgaji: '',
+            predikat: 'Jayyid Jiddan',
+            catatan: ''
+          });
+        }
+
+        function hapusSantri(s) {
+          if (!window.confirm('Hapus data santri "' + s.namaLengkap + '" dari ' + s.komplek + '?')) return;
+          if (editingSantriId === s.id) batalEditSantri();
+          setState(function (prev) {
+            return {
+              ...prev,
+              santri: prev.santri.filter(function (item) {
+                return item.id !== s.id;
+              })
+            };
+          });
+        }
+
+        // Handler Logo
+        function handleUploadLogoFile(ev) {
+          const file = ev.target.files && ev.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function () {
+            const result = String(reader.result || '');
+            setState(function (prev) {
+              return { ...prev, logoUrl: result };
+            });
+            setShowLogoModal(false);
+          };
+          reader.readAsDataURL(file);
+          ev.target.value = '';
+        }
+
+        function handleSimpanLogoUrl(ev) {
+          ev.preventDefault();
+          setState(function (prev) {
+            return { ...prev, logoUrl: logoUrlInput.trim() };
+          });
+          setShowLogoModal(false);
+        }
+
+        // Ekspor CSV (Santri & Pencapaian Ngaji)
+        function handleExportCSV() {
+          const headers = ['No', 'Komplek', 'Nama Lengkap Santri', 'Kamar', 'Pencapaian Ngaji', 'Predikat', 'Catatan Pembinaan'];
+          const rows = state.santri.map(function (s, idx) {
+            return [
+              idx + 1,
+              s.komplek,
+              s.namaLengkap,
+              s.kamar,
+              s.pencapaianNgaji,
+              s.predikat,
+              s.catatan
+            ].map(function (val) {
+              const str = String(val || '').replace(/"/g, '""');
+              return '"' + str + '"';
+            }).join(',');
+          });
+          const csvContent = '\uFEFF' + [headers.join(',')].concat(rows).join('\n');
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = 'nusimak-nurul-ulum-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+          a.download = 'NUSIMAK-Santri-Ngaji-' + new Date().toISOString().slice(0, 10) + '.csv';
           a.click();
           URL.revokeObjectURL(url);
         }
 
-        function imporBackupJSON(ev) {
+        // Ekspor JSON
+        function handleExportJSON() {
+          const payload = {
+            aplikasi: 'NUSIMAK — Pondok Pesantren Nurul Ulum Bantul',
+            dieksportPada: new Date().toISOString(),
+            ...state
+          };
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'NUSIMAK-Backup-' + new Date().toISOString().slice(0, 10) + '.json';
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+
+        // Impor JSON
+        function handleImportJSON(ev) {
           const file = ev.target.files && ev.target.files[0];
           if (!file) return;
           const reader = new FileReader();
           reader.onload = function () {
             try {
               const parsed = JSON.parse(String(reader.result || '{}'));
-              if (Array.isArray(parsed.catatan) && Array.isArray(parsed.santri)) {
-                setData({ catatan: parsed.catatan, santri: parsed.santri });
+              if (!Array.isArray(parsed.catatan) || !Array.isArray(parsed.santri)) {
+                window.alert('Format file JSON tidak sesuai dengan struktur NUSIMAK.');
+                return;
               }
+              setState({
+                periodeAktif: typeof parsed.periodeAktif === 'string' && parsed.periodeAktif.trim()
+                  ? parsed.periodeAktif
+                  : state.periodeAktif,
+                logoUrl: typeof parsed.logoUrl === 'string' ? parsed.logoUrl : state.logoUrl,
+                catatan: parsed.catatan,
+                santri: parsed.santri
+              });
+              window.alert('Data backup NUSIMAK berhasil dipulihkan.');
             } catch (_err) {
-              // Abaikan file tidak valid
+              window.alert('Gagal membaca file JSON. Pastikan file tidak rusak.');
             }
           };
           reader.readAsText(file);
           ev.target.value = '';
         }
 
+        // Reset ke Data Contoh
+        function handleResetDefault() {
+          const ok1 = window.confirm('Kembalikan seluruh data ke data contoh awal? Data yang saat ini tersimpan akan diganti.');
+          if (!ok1) return;
+          const ok2 = window.confirm('Konfirmasi terakhir: Pastikan Anda sudah melakukan Ekspor JSON jika masih memerlukan data lama. Lanjutkan reset?');
+          if (!ok2) return;
+          setState(DEFAULT_STATE);
+          setEditingCatatanId(null);
+          setEditingSantriId(null);
+        }
+
+        const catatanUntukRekap = useMemo(function () {
+          if (!rekapHanyaPeriodeAktif) return state.catatan;
+          return state.catatan.filter(function (c) {
+            return (c.periode || '') === state.periodeAktif;
+          });
+        }, [state.catatan, state.periodeAktif, rekapHanyaPeriodeAktif]);
+
+        const tanggalCetakIndo = formatTanggalIndo(new Date().toISOString().slice(0, 10));
+
         return e(
           'div',
-          { className: 'min-h-screen flex flex-col bg-slate-100 text-slate-900' },
+          { className: 'min-h-screen flex flex-col bg-slate-50 text-slate-900' },
 
-          // Header
+          // HEADER UTAMA
           e(
             'header',
-            { className: 'bg-gradient-to-r from-langit-800 via-langit-700 to-langit-600 text-white border-b-4 border-kitab-400 shadow-sm' },
+            {
+              className:
+                'bg-gradient-to-r from-langit-900 via-langit-800 to-langit-700 text-white border-b-4 border-kitab-400 shadow-sm no-print'
+            },
             e(
               'div',
-              { className: 'max-w-6xl mx-auto px-4 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4' },
+              { className: 'max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4' },
               e(
                 'div',
-                null,
+                { className: 'flex items-center gap-3.5' },
+                e(LogoBadge, { logoUrl: state.logoUrl, sizeClass: 'w-14 h-14' }),
                 e(
                   'div',
-                  { className: 'inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-kitab-400 text-slate-900 mb-2' },
-                  'PONDOK PESANTREN NURUL ULUM • BANTUL'
-                ),
-                e('h1', { className: 'text-2xl md:text-3xl font-bold tracking-tight' }, 'NUSIMAK'),
-                e(
-                  'p',
-                  { className: 'text-sm text-langit-100 mt-0.5' },
-                  'Nurul Ulum Sistem Monitoring Asrama & Kegiatan — Catatan 8 Bagian, Santri & Pencapaian Ngaji'
+                  null,
+                  e(
+                    'div',
+                    { className: 'flex flex-wrap items-center gap-2 mb-1' },
+                    e(
+                      'span',
+                      { className: 'px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide bg-kitab-400 text-slate-900' },
+                      'PONDOK PESANTREN NURUL ULUM BANTUL'
+                    ),
+                    e(
+                      'button',
+                      {
+                        type: 'button',
+                        onClick: function () {
+                          setLogoUrlInput(state.logoUrl && !state.logoUrl.startsWith('data:') ? state.logoUrl : '');
+                          setShowLogoModal(true);
+                        },
+                        className: 'text-[11px] font-semibold text-langit-100 hover:text-kitab-300 underline'
+                      },
+                      state.logoUrl ? 'Ubah Logo' : 'Pasang Logo'
+                    )
+                  ),
+                  e(
+                    'h1',
+                    { className: 'text-xl sm:text-2xl font-extrabold tracking-tight flex items-center gap-2' },
+                    'NUSIMAK',
+                    e('span', { className: 'text-xs sm:text-sm font-medium text-langit-200 hidden sm:inline' }, '— Sistem Monitoring Asrama & Kegiatan')
+                  ),
+                  e(
+                    'p',
+                    { className: 'text-xs text-langit-100 mt-0.5' },
+                    'Administrasi Terpadu 8 Bagian Kepengurusan, Data Santri & Pencapaian Ngaji'
+                  )
                 )
               ),
+
+              // Utilitas Data
               e(
                 'div',
-                { className: 'flex flex-wrap items-center gap-2 no-print' },
+                { className: 'flex flex-wrap items-center gap-2' },
                 e(
                   'button',
                   {
                     type: 'button',
-                    onClick: unduhBackupJSON,
-                    className: 'px-3 py-2 rounded-lg text-xs font-semibold bg-white/15 hover:bg-white/25 border border-white/25 transition'
+                    onClick: handleExportCSV,
+                    className: 'px-3 py-2 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition'
+                  },
+                  'Ekspor CSV'
+                ),
+                e(
+                  'button',
+                  {
+                    type: 'button',
+                    onClick: handleExportJSON,
+                    className: 'px-3 py-2 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition'
                   },
                   'Ekspor JSON'
                 ),
                 e(
                   'label',
                   {
-                    className: 'px-3 py-2 rounded-lg text-xs font-semibold bg-white/15 hover:bg-white/25 border border-white/25 transition cursor-pointer'
+                    className: 'px-3 py-2 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition cursor-pointer'
                   },
                   'Impor JSON',
-                  e('input', { type: 'file', accept: 'application/json', onChange: imporBackupJSON, className: 'hidden' })
+                  e('input', { type: 'file', accept: 'application/json', onChange: handleImportJSON, className: 'hidden' })
                 ),
                 e(
                   'button',
                   {
                     type: 'button',
-                    onClick: function () { window.print(); },
-                    className: 'px-3.5 py-2 rounded-lg text-xs font-bold bg-kitab-400 hover:bg-kitab-300 text-slate-900 transition'
+                    onClick: handleResetDefault,
+                    className: 'px-3 py-2 rounded-lg text-xs font-semibold bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 border border-rose-300/30 transition'
                   },
-                  'Cetak Rekap'
+                  'Reset Contoh'
+                ),
+                e(
+                  'button',
+                  {
+                    type: 'button',
+                    onClick: function () {
+                      setActiveTab('rekap');
+                      setTimeout(function () {
+                        window.print();
+                      }, 120);
+                    },
+                    className: 'px-3.5 py-2 rounded-lg text-xs font-bold bg-kitab-400 hover:bg-kitab-300 text-slate-900 shadow-sm transition'
+                  },
+                  'Cetak Laporan'
                 )
               )
             )
           ),
 
-          // Ringkasan Cepat
-          e(
-            'section',
-            { className: 'max-w-6xl w-full mx-auto px-4 -mt-3 no-print' },
+          // MODAL PENGATURAN LOGO
+          showLogoModal &&
             e(
               'div',
-              { className: 'grid grid-cols-2 md:grid-cols-4 gap-3' },
-              [
-                { label: 'Unsur / Bagian', val: String(BAGIAN_LIST.length), sub: 'Termasuk Dewan Pengasuh' },
-                { label: 'Catatan Laporan', val: String(data.catatan.length), sub: 'Tersimpan di browser' },
-                { label: 'Komplek Asrama', val: String(KOMPLEK_LIST.length), sub: 'Zainuri, Achmadi, Romlah, Wasirah' },
-                { label: 'Total Data Santri', val: String(data.santri.length), sub: 'Nama & capaian ngaji' }
-              ].map((stat, idx) =>
+              {
+                className: 'fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 no-print',
+                onClick: function () { setShowLogoModal(false); }
+              },
+              e(
+                'div',
+                {
+                  className: 'bg-white rounded-2xl border border-slate-200 max-w-md w-full p-5 shadow-xl space-y-4',
+                  onClick: function (ev) { ev.stopPropagation(); }
+                },
                 e(
                   'div',
-                  {
-                    key: idx,
-                    className: 'bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm'
+                  { className: 'flex items-center justify-between' },
+                  e('h3', { className: 'text-base font-bold text-slate-900' }, 'Pengaturan Logo Pesantren'),
+                  e(
+                    'button',
+                    {
+                      type: 'button',
+                      onClick: function () { setShowLogoModal(false); },
+                      className: 'text-slate-400 hover:text-slate-700 text-sm font-bold'
+                    },
+                    'Tutup'
+                  )
+                ),
+                e(
+                  'div',
+                  { className: 'flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200' },
+                  e(LogoBadge, { logoUrl: state.logoUrl, sizeClass: 'w-14 h-14' }),
+                  e(
+                    'div',
+                    { className: 'text-xs text-slate-600' },
+                    'Logo tampil di header aplikasi dan kop laporan cetak resmi Pondok Pesantren Nurul Ulum Bantul.'
+                  )
+                ),
+                e(
+                  'div',
+                  null,
+                  e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, '1. Unggah File Gambar Logo (JPEG/PNG/WEBP)'),
+                  e('input', {
+                    type: 'file',
+                    accept: 'image/*',
+                    onChange: handleUploadLogoFile,
+                    className: 'block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-langit-50 file:text-langit-800 hover:file:bg-langit-100'
+                  })
+                ),
+                e(
+                  'form',
+                  { onSubmit: handleSimpanLogoUrl, className: 'space-y-2' },
+                  e('label', { className: 'block text-xs font-semibold text-slate-700' }, '2. Atau Masukkan Tautan URL Logo'),
+                  e(
+                    'div',
+                    { className: 'flex gap-2' },
+                    e('input', {
+                      type: 'url',
+                      placeholder: 'https://...',
+                      value: logoUrlInput,
+                      onChange: function (ev) { setLogoUrlInput(ev.target.value); },
+                      className: 'flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:outline-none focus:border-langit-600'
+                    }),
+                    e(
+                      'button',
+                      {
+                        type: 'submit',
+                        className: 'px-3 py-1.5 rounded-lg text-xs font-bold bg-langit-600 text-white hover:bg-langit-700'
+                      },
+                      'Simpan URL'
+                    )
+                  )
+                ),
+                state.logoUrl &&
+                  e(
+                    'button',
+                    {
+                      type: 'button',
+                      onClick: function () {
+                        setState(function (prev) { return { ...prev, logoUrl: '' }; });
+                        setShowLogoModal(false);
+                      },
+                      className: 'w-full py-2 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200'
+                    },
+                    'Hapus Logo & Gunakan Emblem NU'
+                  )
+              )
+            ),
+
+          // BAR STATUS & PERIODE AKTIF
+          e(
+            'div',
+            { className: 'bg-white border-b border-slate-200 no-print' },
+            e(
+              'div',
+              { className: 'max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2' },
+              e(
+                'div',
+                { className: 'flex flex-wrap items-center gap-2' },
+                e('span', { className: 'text-xs font-semibold text-slate-600' }, 'Periode Aktif:'),
+                e('input', {
+                  type: 'text',
+                  value: state.periodeAktif,
+                  onChange: function (ev) {
+                    const val = ev.target.value;
+                    setState(function (prev) { return { ...prev, periodeAktif: val }; });
                   },
-                  e('div', { className: 'text-xs font-medium text-slate-500' }, stat.label),
-                  e('div', { className: 'text-2xl font-bold text-langit-800 mt-0.5' }, stat.val),
-                  e('div', { className: 'text-[11px] text-slate-500 mt-0.5' }, stat.sub)
-                )
+                  className: 'text-xs font-semibold text-langit-900 bg-langit-50 border border-langit-200 rounded-lg px-2.5 py-1 w-64 sm:w-80 focus:outline-none focus:border-langit-600'
+                })
+              ),
+              e(
+                'div',
+                { className: 'flex items-center gap-2 text-xs text-slate-500' },
+                e('span', { className: 'w-2 h-2 rounded-full bg-emerald-500 inline-block' }),
+                e('span', null, savedIndicator)
               )
             )
           ),
 
-          // Navigasi Tab
+          // RINGKASAN EKSEKUTIF & INDIKATOR PRIORITAS
           e(
-            'nav',
-            { className: 'max-w-6xl w-full mx-auto px-4 mt-5 no-print' },
+            'section',
+            { className: 'max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 no-print' },
             e(
               'div',
-              { className: 'inline-flex flex-wrap gap-2 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm' },
+              { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5' },
+
+              // Kartu 1: 8 Bagian
+              e(
+                'button',
+                {
+                  type: 'button',
+                  onClick: function () {
+                    setActiveTab('bagian');
+                    setFilterBagian('semua');
+                    setFilterStatus('semua');
+                  },
+                  className: 'bg-white rounded-xl p-4 border border-slate-200 hover:border-langit-400 text-left shadow-sm transition'
+                },
+                e('div', { className: 'text-xs font-semibold text-slate-500' }, 'Struktur Kepengurusan'),
+                e('div', { className: 'text-2xl font-extrabold text-langit-800 mt-1' }, '8 Bagian'),
+                e('div', { className: 'text-xs text-slate-600 mt-1' }, '3 lapisan tata kelola & asrama')
+              ),
+
+              // Kartu 2: Prioritas Tindak Lanjut
+              e(
+                'button',
+                {
+                  type: 'button',
+                  onClick: function () {
+                    setActiveTab('bagian');
+                    setFilterBagian('semua');
+                    setFilterStatus('Tindak Lanjut');
+                  },
+                  className:
+                    'rounded-xl p-4 border text-left shadow-sm transition ' +
+                    (jumlahTindakLanjut > 0
+                      ? 'bg-kitab-50 border-kitab-400 hover:bg-kitab-100/70'
+                      : 'bg-white border-slate-200 hover:border-langit-400')
+                },
+                e(
+                  'div',
+                  { className: 'flex items-center justify-between' },
+                  e('span', { className: 'text-xs font-semibold text-amber-900' }, 'Perlu Tindak Lanjut'),
+                  jumlahTindakLanjut > 0 &&
+                    e('span', { className: 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-kitab-400 text-slate-900' }, 'PRIORITAS')
+                ),
+                e('div', { className: 'text-2xl font-extrabold text-slate-900 mt-1' }, jumlahTindakLanjut + ' Catatan'),
+                e('div', { className: 'text-xs text-slate-600 mt-1' }, 'Klik untuk saring laporan tindak lanjut')
+              ),
+
+              // Kartu 3: Total Santri
+              e(
+                'button',
+                {
+                  type: 'button',
+                  onClick: function () {
+                    setActiveTab('santri');
+                    setFilterPredikat('semua');
+                  },
+                  className: 'bg-white rounded-xl p-4 border border-slate-200 hover:border-langit-400 text-left shadow-sm transition'
+                },
+                e('div', { className: 'text-xs font-semibold text-slate-500' }, 'Total Santri Terdata'),
+                e('div', { className: 'text-2xl font-extrabold text-langit-800 mt-1' }, state.santri.length + ' Santri'),
+                e('div', { className: 'text-xs text-slate-600 mt-1' }, 'Tersebar di 4 komplek asrama')
+              ),
+
+              // Kartu 4: Perlu Bimbingan Ngaji
+              e(
+                'button',
+                {
+                  type: 'button',
+                  onClick: function () {
+                    const targetSantri = state.santri.find(function (s) {
+                      return s.predikat === 'Perlu Bimbingan';
+                    });
+                    if (targetSantri) {
+                      setKomplekAktif(targetSantri.komplek);
+                    }
+                    setActiveTab('santri');
+                    setFilterPredikat('Perlu Bimbingan');
+                  },
+                  className:
+                    'rounded-xl p-4 border text-left shadow-sm transition ' +
+                    (jumlahPerluBimbingan > 0
+                      ? 'bg-rose-50/70 border-rose-200 hover:border-rose-400'
+                      : 'bg-white border-slate-200 hover:border-langit-400')
+                },
+                e(
+                  'div',
+                  { className: 'flex items-center justify-between' },
+                  e('span', { className: 'text-xs font-semibold text-rose-900' }, 'Perlu Bimbingan Ngaji'),
+                  jumlahPerluBimbingan > 0 &&
+                    e('span', { className: 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800' }, 'PENDAMPINGAN')
+                ),
+                e('div', { className: 'text-2xl font-extrabold text-slate-900 mt-1' }, jumlahPerluBimbingan + ' Santri'),
+                e('div', { className: 'text-xs text-slate-600 mt-1' }, 'Klik untuk tinjau santri perlu bimbingan')
+              )
+            )
+          ),
+
+          // NAVIGASI 3 TAB UTAMA
+          e(
+            'nav',
+            { className: 'max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 no-print' },
+            e(
+              'div',
+              { className: 'flex flex-wrap gap-2 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm w-fit' },
               [
                 { id: 'bagian', label: '1. Skema & Catatan 8 Bagian' },
-                { id: 'santri', label: '2. Santri & Ngaji per Komplek' },
-                { id: 'rekap', label: '3. Rekapitulasi Terpadu' }
-              ].map((t) =>
-                e(
+                { id: 'santri', label: '2. Data Santri & Ngaji per Komplek' },
+                { id: 'rekap', label: '3. Rekapitulasi Terpadu & Cetak' }
+              ].map(function (t) {
+                const aktif = activeTab === t.id;
+                return e(
                   'button',
                   {
                     key: t.id,
                     type: 'button',
-                    onClick: function () { setTab(t.id); },
+                    onClick: function () { setActiveTab(t.id); },
                     className:
-                      'px-4 py-2 rounded-lg text-sm font-semibold transition ' +
-                      (tab === t.id
-                        ? 'bg-langit-600 text-white shadow-sm'
-                        : 'text-slate-700 hover:bg-langit-50')
+                      'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition ' +
+                      (aktif
+                        ? 'bg-langit-700 text-white shadow-sm'
+                        : 'text-slate-700 hover:bg-langit-50 hover:text-langit-800')
                   },
                   t.label
-                )
-              )
+                );
+              })
             )
           ),
 
-          // Konten Utama
+          // KONTEN UTAMA
           e(
             'main',
-            { className: 'max-w-6xl w-full mx-auto px-4 py-6 flex-1 space-y-6' },
+            { className: 'max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 space-y-6' },
 
-            // TAB 1: 8 BAGIAN
-            tab === 'bagian' &&
+            // =========================================================
+            // TAB 1: SKEMA 3 LAPISAN & CATATAN 8 BAGIAN
+            // =========================================================
+            activeTab === 'bagian' &&
               e(
                 'div',
                 { className: 'space-y-6' },
 
-                // Skema 8 Bagian
+                // Skema 3 Lapisan Berjenjang
                 e(
-                  'div',
-                  { className: 'bg-white rounded-2xl border border-slate-200 p-5 shadow-sm' },
+                  'section',
+                  { className: 'bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm' },
                   e(
                     'div',
-                    { className: 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4' },
+                    { className: 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100' },
                     e(
                       'div',
                       null,
-                      e('h2', { className: 'text-lg font-bold text-slate-900' }, 'Skema Struktur 8 Bagian Pengurus'),
-                      e('p', { className: 'text-xs text-slate-600' }, 'Klik salah satu bagian untuk memfilter catatan laporannya.')
+                      e('h2', { className: 'text-lg font-extrabold text-slate-900' }, 'Skema Tata Kelola 8 Bagian Kepengurusan'),
+                      e(
+                        'p',
+                        { className: 'text-xs text-slate-600 mt-0.5' },
+                        'Disusun dalam 3 lapisan fungsional. Klik unit bagian untuk memfilter catatan atau buka langsung komplek terkait.'
+                      )
                     ),
-                    e(
-                      'button',
-                      {
-                        type: 'button',
-                        onClick: function () { setFilterBagian('semua'); },
-                        className: 'text-xs font-semibold text-langit-700 hover:underline self-start sm:self-auto'
-                      },
-                      'Tampilkan Semua (8 Bagian)'
-                    )
-                  ),
-                  e(
-                    'div',
-                    { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3' },
-                    BAGIAN_LIST.map((b, i) => {
-                      const aktif = filterBagian === b.id;
-                      const isPengasuh = b.id === 'dewan_pengasuh';
-                      return e(
+                    filterBagian !== 'semua' &&
+                      e(
                         'button',
                         {
-                          key: b.id,
                           type: 'button',
-                          onClick: function () { setFilterBagian(aktif ? 'semua' : b.id); },
-                          className:
-                            'text-left p-3.5 rounded-xl border transition ' +
-                            (aktif
-                              ? 'bg-langit-50 border-langit-600 ring-2 ring-langit-200'
-                              : isPengasuh
-                              ? 'bg-kitab-100/40 border-kitab-400 hover:bg-kitab-100/70'
-                              : 'bg-slate-50/70 border-slate-200 hover:border-langit-300 hover:bg-langit-50/40')
+                          onClick: function () { setFilterBagian('semua'); },
+                          className: 'px-3 py-1.5 rounded-lg text-xs font-bold bg-langit-50 text-langit-800 border border-langit-200 hover:bg-langit-100 self-start sm:self-auto'
                         },
+                        'Tampilkan Semua 8 Bagian'
+                      )
+                  ),
+
+                  // Render 3 Lapisan dengan Konektor
+                  e(
+                    'div',
+                    { className: 'mt-5 space-y-2' },
+                    LAPISAN_SKEMA.map(function (lapisan, idxLap) {
+                      return e(
+                        'div',
+                        { key: lapisan.kodeLapisan },
                         e(
                           'div',
-                          { className: 'flex items-center justify-between gap-2 mb-1' },
+                          { className: 'rounded-xl border border-slate-200 bg-slate-50/70 p-4' },
                           e(
-                            'span',
-                            {
-                              className:
-                                'text-[11px] font-bold px-2 py-0.5 rounded ' +
-                                (isPengasuh ? 'bg-kitab-400 text-slate-900' : 'bg-langit-100 text-langit-800')
-                            },
-                            '0' + (i + 1)
-                          ),
-                          isPengasuh &&
+                            'div',
+                            { className: 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3' },
                             e(
-                              'span',
-                              { className: 'text-[10px] font-semibold uppercase tracking-wide text-amber-900' },
-                              'Pembina Utama'
-                            )
+                              'div',
+                              { className: 'flex items-center gap-2' },
+                              e(
+                                'span',
+                                { className: 'text-[10px] font-extrabold tracking-wider px-2 py-0.5 rounded bg-langit-800 text-white' },
+                                lapisan.kodeLapisan
+                              ),
+                              e('h3', { className: 'text-sm font-bold text-slate-900' }, lapisan.judul)
+                            ),
+                            e('span', { className: 'text-xs text-slate-500' }, lapisan.keterangan)
+                          ),
+                          e(
+                            'div',
+                            { className: 'grid ' + lapisan.gridClass + ' gap-3' },
+                            lapisan.anggota.map(function (unit) {
+                              const isSelected = filterBagian === unit.id;
+                              const count = jumlahCatatanPerBagian[unit.id] || 0;
+                              return e(
+                                'div',
+                                {
+                                  key: unit.id,
+                                  className:
+                                    'rounded-xl border p-3.5 transition flex flex-col justify-between ' +
+                                    (isSelected
+                                      ? 'bg-langit-50 border-langit-600 ring-2 ring-langit-200'
+                                      : unit.utama
+                                      ? 'bg-kitab-50/80 border-kitab-400 hover:border-kitab-500'
+                                      : 'bg-white border-slate-200 hover:border-langit-400')
+                                },
+                                e(
+                                  'div',
+                                  null,
+                                  e(
+                                    'div',
+                                    { className: 'flex items-center justify-between gap-2 mb-1.5' },
+                                    e(
+                                      'span',
+                                      {
+                                        className:
+                                          'text-[11px] font-extrabold px-2 py-0.5 rounded ' +
+                                          (unit.utama ? 'bg-kitab-400 text-slate-900' : 'bg-langit-100 text-langit-900')
+                                      },
+                                      unit.nomor
+                                    ),
+                                    e(
+                                      'span',
+                                      { className: 'text-[11px] font-semibold text-slate-500' },
+                                      count + ' catatan'
+                                    )
+                                  ),
+                                  e('div', { className: 'font-bold text-sm text-slate-900' }, unit.nama),
+                                  e('p', { className: 'text-xs text-slate-600 mt-1 leading-relaxed' }, unit.peran)
+                                ),
+                                e(
+                                  'div',
+                                  { className: 'mt-3 pt-2.5 border-t border-slate-100 flex items-center gap-2' },
+                                  e(
+                                    'button',
+                                    {
+                                      type: 'button',
+                                      onClick: function () {
+                                        const nextVal = isSelected ? 'semua' : unit.id;
+                                        setFilterBagian(nextVal);
+                                        if (nextVal !== 'semua' && !editingCatatanId) {
+                                          setFormCatatan(function (prev) { return { ...prev, bagianId: nextVal }; });
+                                        }
+                                      },
+                                      className:
+                                        'flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition ' +
+                                        (isSelected
+                                          ? 'bg-langit-700 text-white'
+                                          : 'bg-slate-100 hover:bg-langit-100 text-slate-800 hover:text-langit-900')
+                                    },
+                                    isSelected ? 'Sedang Difilter' : 'Filter Catatan'
+                                  ),
+                                  unit.komplekTarget &&
+                                    e(
+                                      'button',
+                                      {
+                                        type: 'button',
+                                        onClick: function () {
+                                          setKomplekAktif(unit.komplekTarget);
+                                          setActiveTab('santri');
+                                        },
+                                        className: 'py-1.5 px-2.5 rounded-lg text-xs font-bold bg-langit-600 hover:bg-langit-700 text-white transition'
+                                      },
+                                      'Buka Komplek'
+                                    )
+                                )
+                              );
+                            })
+                          )
                         ),
-                        e('div', { className: 'font-bold text-sm text-slate-900' }, b.nama),
-                        e('p', { className: 'text-xs text-slate-600 mt-1 leading-relaxed' }, b.peran)
+                        // Konektor vertikal antar lapisan
+                        idxLap < LAPISAN_SKEMA.length - 1 &&
+                          e(
+                            'div',
+                            { className: 'flex justify-center py-1' },
+                            e('div', { className: 'w-0.5 h-4 bg-langit-300' })
+                          )
                       );
                     })
                   )
                 ),
 
-                // Form & Daftar Catatan
+                // Form & Daftar Catatan Bagian
                 e(
                   'div',
                   { className: 'grid grid-cols-1 lg:grid-cols-12 gap-6' },
 
-                  // Form Input Catatan
+                  // Form Tambah / Edit Catatan
                   e(
                     'form',
                     {
-                      onSubmit: tambahCatatan,
-                      className: 'lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3.5 h-fit'
+                      ref: formCatatanRef,
+                      onSubmit: handleSimpanCatatan,
+                      className:
+                        'lg:col-span-4 rounded-2xl border p-5 shadow-sm space-y-3.5 h-fit ' +
+                        (editingCatatanId ? 'bg-kitab-50/50 border-kitab-400' : 'bg-white border-slate-200')
                     },
-                    e('h3', { className: 'text-base font-bold text-slate-900' }, 'Tambah Catatan Bagian'),
+                    e(
+                      'div',
+                      { className: 'flex items-center justify-between' },
+                      e(
+                        'h3',
+                        { className: 'text-base font-extrabold text-slate-900' },
+                        editingCatatanId ? 'Edit Catatan Bagian' : 'Tambah Catatan Bagian'
+                      ),
+                      editingCatatanId &&
+                        e(
+                          'button',
+                          {
+                            type: 'button',
+                            onClick: batalEditCatatan,
+                            className: 'text-xs font-semibold text-slate-600 hover:text-slate-900 underline'
+                          },
+                          'Batal'
+                        )
+                    ),
                     e(
                       'div',
                       null,
-                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Bagian / Unsur'),
+                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Bagian / Unsur Pengurus'),
                       e(
                         'select',
                         {
@@ -539,7 +1344,9 @@
                           onChange: function (ev) { setFormCatatan({ ...formCatatan, bagianId: ev.target.value }); },
                           className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:border-langit-600'
                         },
-                        BAGIAN_LIST.map((b) => e('option', { key: b.id, value: b.id }, b.nama))
+                        SEMUA_BAGIAN.map(function (b) {
+                          return e('option', { key: b.id, value: b.id }, b.nomor + ' — ' + b.nama);
+                        })
                       )
                     ),
                     e(
@@ -551,9 +1358,10 @@
                         e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Tanggal'),
                         e('input', {
                           type: 'date',
+                          required: true,
                           value: formCatatan.tanggal,
                           onChange: function (ev) { setFormCatatan({ ...formCatatan, tanggal: ev.target.value }); },
-                          className: 'w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm focus:outline-none focus:border-langit-600'
+                          className: 'w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm bg-white focus:outline-none focus:border-langit-600'
                         })
                       ),
                       e(
@@ -567,95 +1375,185 @@
                             onChange: function (ev) { setFormCatatan({ ...formCatatan, status: ev.target.value }); },
                             className: 'w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm bg-white focus:outline-none focus:border-langit-600'
                           },
-                          ['Dipantau', 'Tindak Lanjut', 'Selesai'].map((st) => e('option', { key: st, value: st }, st))
+                          STATUS_LIST.map(function (st) {
+                            return e('option', { key: st, value: st }, st);
+                          })
                         )
                       )
                     ),
                     e(
                       'div',
                       null,
-                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Judul Catatan'),
+                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Periode / Semester'),
+                      e('input', {
+                        type: 'text',
+                        value: formCatatan.periode,
+                        onChange: function (ev) { setFormCatatan({ ...formCatatan, periode: ev.target.value }); },
+                        className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-xs bg-white focus:outline-none focus:border-langit-600'
+                      })
+                    ),
+                    e(
+                      'div',
+                      null,
+                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Judul Laporan / Arahan'),
                       e('input', {
                         type: 'text',
                         required: true,
                         placeholder: 'Contoh: Evaluasi setoran ngaji malam',
                         value: formCatatan.judul,
                         onChange: function (ev) { setFormCatatan({ ...formCatatan, judul: ev.target.value }); },
-                        className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-langit-600'
+                        className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:border-langit-600'
                       })
                     ),
                     e(
                       'div',
                       null,
-                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Isi Catatan / Arahan'),
+                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Isi Catatan & Tindak Lanjut'),
                       e('textarea', {
                         rows: 3,
                         required: true,
-                        placeholder: 'Tuliskan poin laporan, temuan, atau tindak lanjut...',
+                        placeholder: 'Tuliskan rincian laporan, arahan pengasuh, atau langkah penyelesaian...',
                         value: formCatatan.isi,
                         onChange: function (ev) { setFormCatatan({ ...formCatatan, isi: ev.target.value }); },
-                        className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-langit-600'
+                        className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:border-langit-600'
                       })
                     ),
                     e(
                       'button',
                       {
                         type: 'submit',
-                        className: 'w-full py-2.5 px-4 rounded-lg text-sm font-bold bg-langit-600 hover:bg-langit-700 text-white transition'
+                        className:
+                          'w-full py-2.5 px-4 rounded-lg text-sm font-bold text-white transition ' +
+                          (editingCatatanId ? 'bg-amber-600 hover:bg-amber-700' : 'bg-langit-700 hover:bg-langit-800')
                       },
-                      'Simpan Catatan'
+                      editingCatatanId ? 'Simpan Perubahan Catatan' : 'Simpan Catatan'
                     )
                   ),
 
-                  // Daftar Catatan
+                  // Daftar Catatan & Filter Lengkap
                   e(
                     'div',
                     { className: 'lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4' },
                     e(
                       'div',
-                      { className: 'flex flex-col sm:flex-row sm:items-center justify-between gap-3' },
+                      { className: 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2' },
                       e(
-                        'h3',
-                        { className: 'text-base font-bold text-slate-900' },
-                        'Daftar Catatan (' + catatanTersaring.length + ')'
+                        'div',
+                        null,
+                        e(
+                          'h3',
+                          { className: 'text-base font-extrabold text-slate-900' },
+                          'Arsip Catatan & Arahan (' + catatanTersaring.length + ')'
+                        ),
+                        filterBagian !== 'semua' &&
+                          bagianMap[filterBagian] &&
+                          e(
+                            'p',
+                            { className: 'text-xs text-langit-700 font-semibold' },
+                            'Filter aktif: ' + bagianMap[filterBagian].nama
+                          )
                       ),
+                      (filterBagian !== 'semua' || filterStatus !== 'semua' || filterDariTanggal || filterSampaiTanggal || cariCatatan) &&
+                        e(
+                          'button',
+                          {
+                            type: 'button',
+                            onClick: function () {
+                              setFilterBagian('semua');
+                              setFilterStatus('semua');
+                              setFilterDariTanggal('');
+                              setFilterSampaiTanggal('');
+                              setCariCatatan('');
+                            },
+                            className: 'text-xs font-bold text-rose-600 hover:underline self-start sm:self-auto'
+                          },
+                          'Reset Semua Filter'
+                        )
+                    ),
+
+                    // Bar Kontrol Filter
+                    e(
+                      'div',
+                      { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200' },
                       e('input', {
                         type: 'search',
-                        placeholder: 'Cari judul, isi, atau nama bagian...',
+                        placeholder: 'Cari kata kunci...',
                         value: cariCatatan,
                         onChange: function (ev) { setCariCatatan(ev.target.value); },
-                        className: 'w-full sm:w-64 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:border-langit-600'
+                        className: 'rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-langit-600'
+                      }),
+                      e(
+                        'select',
+                        {
+                          value: filterStatus,
+                          onChange: function (ev) { setFilterStatus(ev.target.value); },
+                          className: 'rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:border-langit-600'
+                        },
+                        e('option', { value: 'semua' }, 'Semua Status'),
+                        STATUS_LIST.map(function (st) {
+                          return e('option', { key: st, value: st }, st);
+                        })
+                      ),
+                      e('input', {
+                        type: 'date',
+                        title: 'Dari tanggal',
+                        value: filterDariTanggal,
+                        onChange: function (ev) { setFilterDariTanggal(ev.target.value); },
+                        className: 'rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:border-langit-600'
+                      }),
+                      e('input', {
+                        type: 'date',
+                        title: 'Sampai tanggal',
+                        value: filterSampaiTanggal,
+                        onChange: function (ev) { setFilterSampaiTanggal(ev.target.value); },
+                        className: 'rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:border-langit-600'
                       })
                     ),
+
+                    // List Item Catatan
                     catatanTersaring.length === 0
                       ? e(
                           'div',
-                          { className: 'text-center py-10 text-sm text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300' },
-                          'Belum ada catatan yang sesuai dengan filter.'
+                          { className: 'text-center py-12 text-sm text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300' },
+                          'Tidak ada catatan yang cocok dengan kriteria pencarian/filter saat ini.'
                         )
                       : e(
                           'div',
                           { className: 'space-y-3' },
-                          catatanTersaring.map((item) => {
-                            const b = bagianMap[item.bagianId] || { nama: 'Bagian' };
+                          catatanTersaring.map(function (item) {
+                            const unit = bagianMap[item.bagianId] || { nomor: '--', nama: 'Bagian' };
                             return e(
-                              'div',
+                              'article',
                               {
                                 key: item.id,
-                                className: 'p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition'
+                                className:
+                                  'p-4 rounded-xl border transition ' +
+                                  (editingCatatanId === item.id
+                                    ? 'border-kitab-500 bg-kitab-50/40'
+                                    : 'border-slate-200 bg-white hover:border-langit-300')
                               },
                               e(
                                 'div',
-                                { className: 'flex flex-wrap items-center justify-between gap-2 mb-1.5' },
+                                { className: 'flex flex-wrap items-center justify-between gap-2 mb-2' },
                                 e(
                                   'div',
                                   { className: 'flex flex-wrap items-center gap-2' },
                                   e(
                                     'span',
-                                    { className: 'text-xs font-bold px-2.5 py-0.5 rounded-md bg-langit-100 text-langit-900' },
-                                    b.nama
+                                    {
+                                      className:
+                                        'text-xs font-bold px-2.5 py-0.5 rounded-md ' +
+                                        (unit.utama ? 'bg-kitab-400 text-slate-900' : 'bg-langit-100 text-langit-900')
+                                    },
+                                    unit.nomor + ' • ' + unit.nama
                                   ),
-                                  e('span', { className: 'text-xs text-slate-500' }, item.tanggal)
+                                  e('span', { className: 'text-xs text-slate-500 font-medium' }, formatTanggalIndo(item.tanggal)),
+                                  item.periode &&
+                                    e(
+                                      'span',
+                                      { className: 'text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded' },
+                                      item.periode
+                                    )
                                 ),
                                 e(
                                   'div',
@@ -664,26 +1562,35 @@
                                     'select',
                                     {
                                       value: item.status,
-                                      onChange: function (ev) { ubahStatusCatatan(item.id, ev.target.value); },
-                                      className: 'text-xs font-semibold rounded-md px-2 py-1 border ' + badgeStatus(item.status)
+                                      onChange: function (ev) { ubahStatusCepat(item.id, ev.target.value); },
+                                      className: 'text-xs font-bold rounded-md px-2 py-1 border cursor-pointer ' + statusBadgeClass(item.status)
                                     },
-                                    ['Dipantau', 'Tindak Lanjut', 'Selesai'].map((st) =>
-                                      e('option', { key: st, value: st, className: 'bg-white text-slate-900' }, st)
-                                    )
+                                    STATUS_LIST.map(function (st) {
+                                      return e('option', { key: st, value: st, className: 'bg-white text-slate-900' }, st);
+                                    })
                                   ),
                                   e(
                                     'button',
                                     {
                                       type: 'button',
-                                      onClick: function () { hapusCatatan(item.id); },
-                                      className: 'text-xs font-semibold text-rose-600 hover:text-rose-800 px-1.5 py-1'
+                                      onClick: function () { mulaiEditCatatan(item); },
+                                      className: 'text-xs font-semibold text-langit-700 hover:text-langit-900 px-2 py-1 rounded hover:bg-langit-50'
+                                    },
+                                    'Edit'
+                                  ),
+                                  e(
+                                    'button',
+                                    {
+                                      type: 'button',
+                                      onClick: function () { hapusCatatan(item); },
+                                      className: 'text-xs font-semibold text-rose-600 hover:text-rose-800 px-2 py-1 rounded hover:bg-rose-50'
                                     },
                                     'Hapus'
                                   )
                                 )
                               ),
                               e('h4', { className: 'font-bold text-slate-900 text-sm' }, item.judul),
-                              e('p', { className: 'text-sm text-slate-700 mt-1 leading-relaxed' }, item.isi)
+                              e('p', { className: 'text-sm text-slate-700 mt-1 leading-relaxed whitespace-pre-line' }, item.isi)
                             );
                           })
                         )
@@ -691,29 +1598,37 @@
                 )
               ),
 
-            // TAB 2: SANTRI & NGAJI PER KOMPLEK
-            tab === 'santri' &&
+            // =========================================================
+            // TAB 2: DATA SANTRI & PENCAPAIAN NGAJI PER KOMPLEK
+            // =========================================================
+            activeTab === 'santri' &&
               e(
                 'div',
-                { className: 'space-y-5' },
+                { className: 'space-y-6' },
 
-                // Pilihan 4 Komplek
+                // Navigasi 4 Komplek
                 e(
                   'div',
-                  { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3' },
-                  KOMPLEK_LIST.map((komp) => {
-                    const jumlah = data.santri.filter((s) => s.komplek === komp).length;
+                  { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5' },
+                  KOMPLEK_LIST.map(function (komp, idx) {
+                    const daftarKomp = state.santri.filter(function (s) { return s.komplek === komp; });
+                    const perluBimbinganCount = daftarKomp.filter(function (s) { return s.predikat === 'Perlu Bimbingan'; }).length;
                     const aktif = komplekAktif === komp;
                     return e(
                       'button',
                       {
                         key: komp,
                         type: 'button',
-                        onClick: function () { setKomplekAktif(komp); },
+                        onClick: function () {
+                          setKomplekAktif(komp);
+                          if (!editingSantriId) {
+                            setFormSantri(function (prev) { return { ...prev, komplek: komp }; });
+                          }
+                        },
                         className:
-                          'p-4 rounded-xl border text-left transition ' +
+                          'p-4 rounded-xl border text-left transition shadow-sm ' +
                           (aktif
-                            ? 'bg-langit-700 text-white border-langit-700 shadow-sm'
+                            ? 'bg-langit-800 text-white border-langit-800'
                             : 'bg-white text-slate-900 border-slate-200 hover:border-langit-400')
                       },
                       e(
@@ -723,332 +1638,5 @@
                           'span',
                           {
                             className:
-                              'text-xs font-semibold px-2 py-0.5 rounded ' +
-                              (aktif ? 'bg-kitab-400 text-slate-900' : 'bg-langit-50 text-langit-800')
-                          },
-                          jumlah + ' Santri'
-                        )
-                      ),
-                      e('div', { className: 'font-bold text-sm mt-2' }, komp),
-                      e(
-                        'div',
-                        { className: 'text-xs mt-0.5 ' + (aktif ? 'text-langit-100' : 'text-slate-500') },
-                        'Klik untuk kelola nama & ngaji'
-                      )
-                    );
-                  })
-                ),
-
-                e(
-                  'div',
-                  { className: 'grid grid-cols-1 lg:grid-cols-12 gap-6' },
-
-                  // Form Tambah Santri
-                  e(
-                    'form',
-                    {
-                      onSubmit: tambahSantri,
-                      className: 'lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3.5 h-fit'
-                    },
-                    e(
-                      'div',
-                      null,
-                      e('span', { className: 'text-xs font-bold text-langit-700 uppercase' }, komplekAktif),
-                      e('h3', { className: 'text-base font-bold text-slate-900' }, 'Tambah Data Santri')
-                    ),
-                    e(
-                      'div',
-                      null,
-                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Nama Lengkap Santri'),
-                      e('input', {
-                        type: 'text',
-                        required: true,
-                        placeholder: 'Contoh: Muhammad Rizky Pratama',
-                        value: formSantri.namaLengkap,
-                        onChange: function (ev) { setFormSantri({ ...formSantri, namaLengkap: ev.target.value }); },
-                        className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-langit-600'
-                      })
-                    ),
-                    e(
-                      'div',
-                      { className: 'grid grid-cols-2 gap-2.5' },
-                      e(
-                        'div',
-                        null,
-                        e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Kamar'),
-                        e('input', {
-                          type: 'text',
-                          placeholder: 'Contoh: A-04',
-                          value: formSantri.kamar,
-                          onChange: function (ev) { setFormSantri({ ...formSantri, kamar: ev.target.value }); },
-                          className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-langit-600'
-                        })
-                      ),
-                      e(
-                        'div',
-                        null,
-                        e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Predikat Ngaji'),
-                        e(
-                          'select',
-                          {
-                            value: formSantri.predikat,
-                            onChange: function (ev) { setFormSantri({ ...formSantri, predikat: ev.target.value }); },
-                            className: 'w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm bg-white focus:outline-none focus:border-langit-600'
-                          },
-                          PREDIKAT_NGAJI.map((p) => e('option', { key: p, value: p }, p))
-                        )
-                      )
-                    ),
-                    e(
-                      'div',
-                      null,
-                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Pencapaian Ngaji'),
-                      e('input', {
-                        type: 'text',
-                        required: true,
-                        placeholder: 'Contoh: Juz 15 lancar, mulai Tuhfatul Athfal',
-                        value: formSantri.pencapaianNgaji,
-                        onChange: function (ev) { setFormSantri({ ...formSantri, pencapaianNgaji: ev.target.value }); },
-                        className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-langit-600'
-                      })
-                    ),
-                    e(
-                      'div',
-                      null,
-                      e('label', { className: 'block text-xs font-semibold text-slate-700 mb-1' }, 'Catatan Santri'),
-                      e('textarea', {
-                        rows: 3,
-                        placeholder: 'Catatan perkembangan setoran, adab, atau pendampingan...',
-                        value: formSantri.catatan,
-                        onChange: function (ev) { setFormSantri({ ...formSantri, catatan: ev.target.value }); },
-                        className: 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-langit-600'
-                      })
-                    ),
-                    e(
-                      'button',
-                      {
-                        type: 'submit',
-                        className: 'w-full py-2.5 px-4 rounded-lg text-sm font-bold bg-langit-600 hover:bg-langit-700 text-white transition'
-                      },
-                      'Simpan Santri ke Komplek'
-                    )
-                  ),
-
-                  // Daftar Santri Komplek Aktif
-                  e(
-                    'div',
-                    { className: 'lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4' },
-                    e(
-                      'div',
-                      { className: 'flex flex-col sm:flex-row sm:items-center justify-between gap-3' },
-                      e(
-                        'div',
-                        null,
-                        e('h3', { className: 'text-base font-bold text-slate-900' }, komplekAktif),
-                        e(
-                          'p',
-                          { className: 'text-xs text-slate-500' },
-                          'Menampilkan ' + santriKomplek.length + ' santri'
-                        )
-                      ),
-                      e('input', {
-                        type: 'search',
-                        placeholder: 'Cari nama, ngaji, kamar, atau catatan...',
-                        value: cariSantri,
-                        onChange: function (ev) { setCariSantri(ev.target.value); },
-                        className: 'w-full sm:w-64 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:border-langit-600'
-                      })
-                    ),
-                    santriKomplek.length === 0
-                      ? e(
-                          'div',
-                          { className: 'text-center py-10 text-sm text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300' },
-                          'Belum ada data santri di komplek ini.'
-                        )
-                      : e(
-                          'div',
-                          { className: 'overflow-x-auto' },
-                          e(
-                            'table',
-                            { className: 'w-full text-left border-collapse text-sm' },
-                            e(
-                              'thead',
-                              null,
-                              e(
-                                'tr',
-                                { className: 'border-b border-slate-200 text-xs uppercase text-slate-500 bg-slate-50' },
-                                e('th', { className: 'py-2.5 px-3' }, 'No'),
-                                e('th', { className: 'py-2.5 px-3' }, 'Nama Lengkap'),
-                                e('th', { className: 'py-2.5 px-3' }, 'Pencapaian Ngaji'),
-                                e('th', { className: 'py-2.5 px-3' }, 'Predikat'),
-                                e('th', { className: 'py-2.5 px-3' }, 'Catatan'),
-                                e('th', { className: 'py-2.5 px-3 text-right' }, 'Aksi')
-                              )
-                            ),
-                            e(
-                              'tbody',
-                              { className: 'divide-y divide-slate-100' },
-                              santriKomplek.map((s, idx) =>
-                                e(
-                                  'tr',
-                                  { key: s.id, className: 'hover:bg-langit-50/40 align-top' },
-                                  e('td', { className: 'py-3 px-3 text-slate-500 font-medium' }, String(idx + 1)),
-                                  e(
-                                    'td',
-                                    { className: 'py-3 px-3' },
-                                    e('div', { className: 'font-bold text-slate-900' }, s.namaLengkap),
-                                    e('div', { className: 'text-xs text-slate-500' }, 'Kamar: ' + s.kamar)
-                                  ),
-                                  e('td', { className: 'py-3 px-3 text-slate-800' }, s.pencapaianNgaji),
-                                  e(
-                                    'td',
-                                    { className: 'py-3 px-3 whitespace-nowrap' },
-                                    e(
-                                      'span',
-                                      { className: 'text-xs font-semibold px-2.5 py-1 rounded-full ' + badgePredikat(s.predikat) },
-                                      s.predikat
-                                    )
-                                  ),
-                                  e('td', { className: 'py-3 px-3 text-slate-600' }, s.catatan),
-                                  e(
-                                    'td',
-                                    { className: 'py-3 px-3 text-right' },
-                                    e(
-                                      'button',
-                                      {
-                                        type: 'button',
-                                        onClick: function () { hapusSantri(s.id); },
-                                        className: 'text-xs font-semibold text-rose-600 hover:text-rose-800'
-                                      },
-                                      'Hapus'
-                                    )
-                                  )
-                                )
-                              )
-                            )
-                          )
-                        )
-                  )
-                )
-              ),
-
-            // TAB 3: REKAPITULASI TERPADU
-            tab === 'rekap' &&
-              e(
-                'div',
-                { className: 'space-y-6' },
-                e(
-                  'div',
-                  { className: 'bg-white rounded-2xl border border-slate-200 p-5 shadow-sm print-break' },
-                  e('h2', { className: 'text-lg font-bold text-slate-900 mb-1' }, 'Rekapitulasi Catatan 8 Bagian'),
-                  e('p', { className: 'text-xs text-slate-500 mb-4' }, 'Pondok Pesantren Nurul Ulum Bantul'),
-                  e(
-                    'div',
-                    { className: 'overflow-x-auto' },
-                    e(
-                      'table',
-                      { className: 'w-full text-left border-collapse text-sm' },
-                      e(
-                        'thead',
-                        null,
-                        e(
-                          'tr',
-                          { className: 'border-b border-slate-200 bg-langit-50 text-xs uppercase text-langit-900' },
-                          e('th', { className: 'py-2.5 px-3' }, 'Bagian'),
-                          e('th', { className: 'py-2.5 px-3' }, 'Tanggal'),
-                          e('th', { className: 'py-2.5 px-3' }, 'Judul & Catatan'),
-                          e('th', { className: 'py-2.5 px-3' }, 'Status')
-                        )
-                      ),
-                      e(
-                        'tbody',
-                        { className: 'divide-y divide-slate-100' },
-                        data.catatan.map((c) => {
-                          const b = bagianMap[c.bagianId] || { nama: 'Bagian' };
-                          return e(
-                            'tr',
-                            { key: c.id, className: 'align-top' },
-                            e('td', { className: 'py-2.5 px-3 font-semibold text-slate-900 whitespace-nowrap' }, b.nama),
-                            e('td', { className: 'py-2.5 px-3 text-slate-600 whitespace-nowrap' }, c.tanggal),
-                            e(
-                              'td',
-                              { className: 'py-2.5 px-3' },
-                              e('div', { className: 'font-bold text-slate-900' }, c.judul),
-                              e('div', { className: 'text-slate-700 text-xs mt-0.5' }, c.isi)
-                            ),
-                            e(
-                              'td',
-                              { className: 'py-2.5 px-3 whitespace-nowrap' },
-                              e('span', { className: 'text-xs font-semibold px-2 py-0.5 rounded border ' + badgeStatus(c.status) }, c.status)
-                            )
-                          );
-                        })
-                      )
-                    )
-                  )
-                ),
-
-                e(
-                  'div',
-                  { className: 'bg-white rounded-2xl border border-slate-200 p-5 shadow-sm print-break' },
-                  e('h2', { className: 'text-lg font-bold text-slate-900 mb-4' }, 'Rekapitulasi Santri & Pencapaian Ngaji per Komplek'),
-                  e(
-                    'div',
-                    { className: 'space-y-5' },
-                    KOMPLEK_LIST.map((komp) => {
-                      const daftar = data.santri.filter((s) => s.komplek === komp);
-                      return e(
-                        'div',
-                        { key: komp, className: 'border border-slate-200 rounded-xl p-4' },
-                        e(
-                          'div',
-                          { className: 'flex items-center justify-between mb-2.5' },
-                          e('h3', { className: 'font-bold text-sm text-langit-900' }, komp),
-                          e('span', { className: 'text-xs font-semibold text-slate-500' }, daftar.length + ' santri')
-                        ),
-                        daftar.length === 0
-                          ? e('p', { className: 'text-xs text-slate-500 italic' }, 'Belum ada santri tercatat.')
-                          : e(
-                              'ul',
-                              { className: 'divide-y divide-slate-100 text-xs' },
-                              daftar.map((s) =>
-                                e(
-                                  'li',
-                                  { key: s.id, className: 'py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1' },
-                                  e(
-                                    'div',
-                                    null,
-                                    e('span', { className: 'font-bold text-slate-900' }, s.namaLengkap),
-                                    e('span', { className: 'text-slate-500' }, ' (' + s.kamar + ') — '),
-                                    e('span', { className: 'text-slate-800' }, s.pencapaianNgaji),
-                                    e('span', { className: 'text-slate-500' }, ' • Catatan: ' + s.catatan)
-                                  ),
-                                  e(
-                                    'span',
-                                    { className: 'font-semibold px-2 py-0.5 rounded-full self-start sm:self-auto ' + badgePredikat(s.predikat) },
-                                    s.predikat
-                                  )
-                                )
-                              )
-                            )
-                      );
-                    })
-                  )
-                )
-              )
-          ),
-
-          // Footer
-          e(
-            'footer',
-            { className: 'bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500 no-print' },
-            'NUSIMAK • Pondok Pesantren Nurul Ulum Bantul • Data tersimpan lokal (localStorage)'
-          )
-        );
-      }
-
-      ReactDOM.createRoot(document.getElementById('root')).render(e(App));
-    })();
-  </script>
-</body>
-</html>
+                              'text-[11px] font-bold px-2 py-0.5 rounded ' +
+                              (
